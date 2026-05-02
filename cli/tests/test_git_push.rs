@@ -805,6 +805,17 @@ fn test_git_push_multiple() {
     [EOF]
     ");
 
+    // --tags includes untracked tags.
+    let output = work_dir.run_jj(["git", "push", "--tags", "--dry-run"]);
+    insta::assert_snapshot!(output, @"
+    ------- stderr -------
+    Changes to push to origin:
+      tag: tag1 [move sideways from 9b2e76de3920 to 0cb91ecd4965]
+      tag: tag2 [add to 0cb91ecd4965]
+    Dry-run requested, not pushing.
+    [EOF]
+    ");
+
     // First dry-run
     // TODO: untracked tags should be included when gets stabilized (#7528)
     let output = work_dir.run_jj(["git", "push", "--all", "--deleted", "--dry-run"]);

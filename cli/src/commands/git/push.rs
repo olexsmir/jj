@@ -87,8 +87,9 @@ use crate::ui::Ui;
 ///
 /// By default, pushes tracking bookmarks pointing to
 /// `remote_bookmarks(remote=<remote>)..@`. Use `--bookmark` to push specific
-/// bookmarks. Use `--all` to push all bookmarks. Use `--change` to generate
-/// bookmark names based on the change IDs of specific commits.
+/// bookmarks. Use `--tags` to push all tags. Use `--all` to push all bookmarks.
+/// Use `--change` to generate bookmark names based on the change IDs of
+/// specific commits.
 ///
 /// When pushing a bookmark, the command pushes all commits in the range from
 /// the remote's current position up to and including the bookmark's target
@@ -154,6 +155,10 @@ pub struct GitPushArgs {
     #[arg(long, short, group = "specific")]
     #[arg(hide = true)] // TODO: unhide when this gets stabilized (#7528)
     tag: Vec<String>,
+
+    /// Push all tags (including new tags)
+    #[arg(long, group = "specific")]
+    tags: bool,
 
     /// Push all bookmarks (including new bookmarks)
     #[arg(long, group = "what")]
@@ -498,6 +503,21 @@ pub async fn cmd_git_push(
             }
         }
 
+        if args.tags {
+            for (name, targets) in view.local_remote_tags(remote) {
+                // `--tags` should push tag updates and creations, but not deletions.
+                if targets.local_target.is_absent() || !seen_tags.insert(name) { continue; }
+                let remote_symbol = name.to_remote_symbol(remote);
+                let allow_new = true;
+                let allow_delete = false;
+                match classify_tag_update(remote_symbol, targets, allow_new, allow_delete) {
+                    Ok(Some(update)) => ref_updates.tags.push((name.to_owned(), update)),
+                    Ok(None) => {}
+                    Err(reason) => return Err(reason.into()),
+                }
+            }
+        }
+
         let mut commits_validator =
             CommitsValidator::new(ui, tx.base_workspace_helper(), remote, args)?;
         // Error out if explicitly-specified targets can't be pushed.
@@ -508,6 +528,7 @@ pub async fn cmd_git_push(
 
         let use_default_revset = args.bookmark.is_empty()
             && args.tag.is_empty()
+            && !args.tags
             && args.change.is_empty()
             && args.revisions.is_empty()
             && args.named.is_empty();

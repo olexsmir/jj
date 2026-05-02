@@ -1733,7 +1733,7 @@ Create a new Git backed repo
 
 Push to a Git remote
 
-By default, pushes tracking bookmarks pointing to `remote_bookmarks(remote=<remote>)..@`. Use `--bookmark` to push specific bookmarks. Use `--all` to push all bookmarks. Use `--change` to generate bookmark names based on the change IDs of specific commits.
+By default, pushes tracking bookmarks pointing to `remote_bookmarks(remote=<remote>)..@`. Use `--bookmark` to push specific bookmarks. Use `--tags` to push all tags. Use `--all` to push all bookmarks. Use `--change` to generate bookmark names based on the change IDs of specific commits.
 
 When pushing a bookmark, the command pushes all commits in the range from the remote's current position up to and including the bookmark's target commit. Any descendant commits beyond the bookmark are not pushed.
 
@@ -1761,6 +1761,7 @@ Before the command actually moves, creates, or deletes a remote bookmark, it mak
    By default, the specified pattern matches bookmark names with glob syntax. You can also use other [string pattern syntax].
 
    [string pattern syntax]: https://docs.jj-vcs.dev/latest/revsets/#string-patterns
+* `--tags` — Push all tags (including new tags)
 * `--all` — Push all bookmarks (including new bookmarks)
 * `--tracked` — Push all tracked bookmarks
 
